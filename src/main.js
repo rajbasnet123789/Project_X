@@ -8,6 +8,12 @@ import { isTrusted } from "./store.js";
 // Mute noisy DevTools Autofill warnings in Chromium
 app.commandLine.appendSwitch("disable-features", "AutofillServerCommunication");
 
+// Direct cache/user data to a writable temp location to avoid Access Denied
+import { tmpdir } from "os";
+const tempRoot = path.join(tmpdir(), "edge-node-cache");
+app.setPath("userData", path.join(tempRoot, "user-data"));
+app.commandLine.appendSwitch("disk-cache-dir", path.join(tempRoot, "disk-cache"));
+
 
 
 const __filename = fileURLToPath(import.meta.url);

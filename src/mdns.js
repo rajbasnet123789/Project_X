@@ -10,24 +10,38 @@ const nodes = new Map();
 
 export function announceNode() {
   const status = getStatus();
-  bonjourInstance.publish({
-    name: `PC-${os.hostname()}`,
-    type: "edge-node",
-    protocol: "tcp",
-    port: 7070,
-    txt: {
-  nodeId,
-  role: status.role,
-  state: status.state,
-  cpu: status.cpuCores.toString(),
-  mem: status.memoryUsage.toString(),
-  gpu: status.gpuAvailable ? "1" : "0",
-  gpuType: status.gpuType
-}
+  const serviceName = `PC-${os.hostname()}-${nodeId.slice(0, 6)}`;
 
-  });
+  const publish = (name) =>
+    bonjourInstance.publish({
+      name,
+      type: "edge-node",
+      protocol: "tcp",
+      port: 7070,
+      txt: {
+        nodeId,
+        role: status.role,
+        state: status.state,
+        cpu: status.cpuCores.toString(),
+        mem: status.memoryUsage.toString(),
+        gpu: status.gpuAvailable ? "1" : "0",
+        gpuType: status.gpuType
+      }
+    });
 
-  console.log("Announced node:", nodeId);
+  try {
+    publish(serviceName);
+    console.log("Announced node:", nodeId, "as", serviceName);
+  } catch (err) {
+    if (err?.message?.includes("Service name is already in use")) {
+      const altName = `${serviceName}-${crypto.randomBytes(2).toString("hex")}`;
+      console.warn("mDNS name in use, retrying with", altName);
+      publish(altName);
+      console.log("Announced node:", nodeId, "as", altName);
+    } else {
+      console.error("Failed to announce node:", err);
+    }
+  }
 }
 
 export function discoverNodes(onUpdate) {
