@@ -17,7 +17,10 @@ let win;
 
 function createWindow() {
 
-  const preloadPath = path.join(__dirname, "preload.js");
+  const preloadPath =
+    typeof MAIN_WINDOW_PRELOAD_VITE_ENTRY !== "undefined"
+      ? MAIN_WINDOW_PRELOAD_VITE_ENTRY
+      : path.join(__dirname, "../preload/edge-node.js");
   console.log("Preload path:", preloadPath);
   console.log("__dirname:", __dirname);
   
@@ -28,7 +31,7 @@ function createWindow() {
       preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: true
+      sandbox: false
     }
   });
   
